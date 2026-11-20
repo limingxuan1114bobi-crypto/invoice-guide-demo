@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>保险管理 · 开票指引配置 Demo</title>
+<style>
+  :root {
+    --primary: #00b578;
+    --primary-dark: #009a66;
+    --primary-light: #e8f8f2;
+    --blue: #3370ff;
+    --text: #1f2329;
+    --text-2: #646a73;
+    --text-3: #8f959e;
+    --border: #dee0e3;
+    --border-light: #eff0f1;
+    --bg: #f5f6f7;
+    --danger: #f54a45;
+    --warning: #ff8800;
+    --radius: 8px;
+    --shadow: 0 4px 16px rgba(31, 35, 41, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+      "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea { font-family: inherit; color: var(--text); }
+
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 32px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, #00d68f, #00a870);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .nav { display: flex; gap: 4px; }
+  .nav a {
+    padding: 0 14px; height: 36px; display: inline-flex; align-items: center;
+    border-radius: 6px; color: var(--text-2); text-decoration: none; font-size: 14px;
+  }
+  .nav a.active { color: var(--primary-dark); background: var(--primary-light); font-weight: 500; }
+  .nav a:hover:not(.active) { background: var(--bg); }
+  .topbar-spacer { flex: 1; }
+  .user-chip { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; }
+  .avatar {
+    width: 26px; height: 26px; border-radius: 50%; background: #ffd8b5;
+    color: #a35500; display: flex; align-items: center; justify-content: center; font-size: 12px;
+  }
+
+  /* ---------- 主内容 ---------- */
+  .page { padding: 20px 24px 40px; max-width: 1280px; margin: 0 auto; }
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-light); margin-bottom: 20px; }
+  .tab {
+    padding: 10px 2px 12px; color: var(--text-2); background: none; border: none;
+    font-size: 15px; position: relative;
+  }
+  .tab.active { color: var(--text); font-weight: 600; }
+  .tab.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+    background: var(--primary); border-radius: 2px;
+  }
+  .card {
+    background: #fff; border-radius: var(--radius); border: 1px solid var(--border-light);
+    box-shadow: 0 1px 3px rgba(31, 35, 41, 0.04); padding: 20px;
+  }
+  .filters { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .field-label { color: var(--text-2); font-size: 13px; white-space: nowrap; }
+  .input, .textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 7px 11px;
+    font-size: 14px; background: #fff; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .input:focus, .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 181, 120, .12); }
+  .input.error, .textarea.error, .rte-wrap.error, .agreement-row.error .input {
+    border-color: var(--danger); box-shadow: 0 0 0 2px rgba(245, 74, 69, .1);
+  }
+  .input[readonly] { background: var(--bg); color: var(--text-2); }
+  .filters .input { width: 200px; }
+  .filters .spacer { flex: 1; }
+
+  .btn {
+    height: 34px; padding: 0 16px; border-radius: 6px; font-size: 14px;
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+  .btn-ghost { border-color: transparent; background: transparent; color: var(--blue); padding: 0 6px; }
+  .btn-ghost:hover { color: var(--blue); background: #f0f4ff; border-color: transparent; }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 13px; }
+  .btn-danger-ghost { color: var(--danger); border-color: transparent; background: transparent; }
+  .btn-danger-ghost:hover { background: #fff0f0; color: var(--danger); border-color: transparent; }
+
+  /* ---------- 表格 ---------- */
+  .table-wrap { overflow-x: auto; }
+  table.list { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.list th, table.list td { text-align: left; padding: 12px 12px; border-bottom: 1px solid var(--border-light); }
+  table.list th {
+    color: var(--text-2); font-weight: 500; background: #fafbfc; font-size: 13px; white-space: nowrap;
+  }
+  table.list tbody tr:hover { background: #fafcfb; }
+  table.list td { color: var(--text); vertical-align: middle; }
+  .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px;
+    border-radius: 4px; font-size: 12px; white-space: nowrap;
+  }
+  .tag-disabled { background: #fff0f0; color: var(--danger); }
+  .tag-enabled { background: var(--primary-light); color: var(--primary-dark); }
+  .tag-on { background: #eef4ff; color: var(--blue); }
+  .tag-off { background: #f2f3f5; color: var(--text-3); }
+  .tag-new { background: #fff5e6; color: #d46b08; font-weight: 500; }
+  .empty { padding: 48px 0; text-align: center; color: var(--text-3); }
+
+  /* ---------- 抽屉 ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 40;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 720px; max-width: 96vw;
+    background: #fff; z-index: 50; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: -8px 0 24px rgba(31, 35, 41, .12);
+  }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head {
+    padding: 18px 24px; border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .drawer-title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 30px; height: 30px; border: none; background: transparent; border-radius: 6px;
+    color: var(--text-2); font-size: 18px; line-height: 1;
+  }
+  .icon-btn:hover { background: var(--bg); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 8px 24px 24px; }
+  .drawer-foot {
+    padding: 14px 24px; border-top: 1px solid var(--border-light);
+    display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0;
+  }
+  .form-section { padding: 18px 0; border-bottom: 1px dashed var(--border-light); }
+  .form-section:last-child { border-bottom: none; }
+  .form-row { display: flex; gap: 16px; margin-bottom: 16px; }
+  .form-row:last-child { margin-bottom: 0; }
+  .form-item { flex: 1; min-width: 0; }
+  .form-label {
+    display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text);
+    margin-bottom: 8px; font-weight: 500;
+  }
+  .form-label .req { color: var(--danger); }
+  .hint { font-size: 12px; color: var(--text-3); margin-top: 6px; line-height: 1.6; }
+  .hint.warn { color: var(--warning); }
+  .error-msg { font-size: 12px; color: var(--danger); margin-top: 6px; display: none; }
+  .error-msg.show { display: block; }
+  .counter { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .counter.over { color: var(--danger); }
+  .label-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+  .section-title {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    font-size: 14px; font-weight: 600;
+  }
+  .section-title .left { display: flex; align-items: center; gap: 8px; }
+
+  /* 协议说明 */
+  .agreement-list { display: flex; flex-direction: column; gap: 10px; }
+  .agreement-row { display: flex; gap: 8px; align-items: center; }
+  .agreement-row .input.name { flex: 0 0 200px; }
+  .agreement-row .input.url { flex: 1; }
+  .agreement-row .counter { flex: 0 0 46px; text-align: right; }
+  .agreement-row .del {
+    flex: 0 0 30px; width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+    background: #fff; color: var(--danger); font-size: 15px;
+  }
+  .agreement-row .del:hover { background: #fff0f0; border-color: #ffccc7; }
+
+  /* 开关 */
+  .switch-wrap { display: flex; align-items: center; gap: 10px; }
+  .switch {
+    position: relative; width: 40px; height: 22px; border-radius: 11px; background: #c9cdd4;
+    border: none; transition: background .2s; flex: 0 0 auto;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch.on { background: var(--primary); }
+  .switch.on::after { left: 20px; }
+  .switch-text { font-size: 13px; color: var(--text-2); }
+  .switch-hint { font-size: 12px; color: var(--text-3); margin-top: 8px; line-height: 1.6; }
+
+  .guide-body { margin-top: 14px; transition: opacity .15s; }
+  .guide-body.collapsed { display: none; }
+
+  /* 富文本 */
+  .rte-wrap { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .rte-toolbar {
+    display: flex; align-items: center; gap: 2px; padding: 6px 8px;
+    background: #fafbfc; border-bottom: 1px solid var(--border-light); flex-wrap: wrap;
+  }
+  .rte-btn {
+    width: 30px; height: 28px; border: none; background: transparent; border-radius: 4px;
+    font-size: 13px; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center;
+  }
+  .rte-btn:hover { background: #eceef0; color: var(--text); }
+  .rte-btn.sep { width: 1px; height: 18px; background: var(--border); margin: 0 6px; border-radius: 0; }
+  .rte-toolbar .spacer { flex: 1; }
+  .rte-editor {
+    min-height: 140px; max-height: 320px; overflow-y: auto; padding: 12px 14px;
+    font-size: 14px; line-height: 1.75; outline: none;
+  }
+  .rte-editor:empty::before { content: attr(data-placeholder); color: var(--text-3); }
+  .rte-editor p { margin: 0 0 8px; }
+  .rte-editor ol, .rte-editor ul { padding-left: 22px; margin: 0 0 8px; }
+  .rte-editor img { max-width: 100%; border-radius: 4px; margin: 6px 0; cursor: zoom-in; }
+  .rte-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: #fafbfc; border-top: 1px solid var(--border-light);
+    font-size: 12px; color: var(--text-3);
+  }
+
+  /* ---------- 弹窗 ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 60;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 10px; width: 400px; max-width: 100%;
+    box-shadow: var(--shadow); overflow: hidden; animation: pop .18s ease-out;
+  }
+  @keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-head { padding: 18px 20px 6px; font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 6px 20px 20px; color: var(--text-2); line-height: 1.7; font-size: 14px; }
+  .modal-foot { padding: 0 20px 20px; display: flex; justify-content: flex-end; gap: 10px; }
+
+  .toast {
+    position: fixed; top: 76px; left: 50%; transform: translate(-50%, -12px);
+    background: #fff; color: var(--text); border-radius: 8px; padding: 10px 18px;
+    box-shadow: var(--shadow); font-size: 14px; z-index: 100; opacity: 0;
+    pointer-events: none; transition: all .25s; display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border-light);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .toast.err .dot { background: var(--danger); }
+
+  /* ---------- 手机预览 ---------- */
+  .phone-stage { display: flex; align-items: center; justify-content: center; }
+  .phone {
+    width: 375px; height: 760px; max-height: 84vh; background: #f7f8fa; border-radius: 32px;
+    box-shadow: 0 0 0 10px #1f2329, 0 18px 50px rgba(0, 0, 0, .35);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .phone-status {
+    height: 34px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px; font-size: 12px; font-weight: 600; color: #000; flex-shrink: 0;
+    background: #fff;
+  }
+  .phone-status .right { display: flex; gap: 4px; align-items: center; letter-spacing: 1px; font-weight: 500; }
+  .phone-nav {
+    height: 46px; background: #fff; display: flex; align-items: center; padding: 0 14px;
+    border-bottom: 1px solid #f0f1f2; flex-shrink: 0; position: relative;
+  }
+  .phone-nav .back { font-size: 20px; color: #1f2329; width: 30px; }
+  .phone-nav .title { position: absolute; left: 0; right: 0; text-align: center; font-size: 17px; font-weight: 500; pointer-events: none; }
+  .phone-nav .star { margin-left: auto; font-size: 17px; color: #1f2329; }
+  .phone-body { flex: 1; overflow-y: auto; }
+  .inv-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px; background: #fff; font-size: 15px; font-weight: 500;
+  }
+  .inv-head .notice { font-size: 12px; color: #8f959e; font-weight: 400; display: flex; align-items: center; gap: 4px; }
+  .month { padding: 12px 14px 6px; font-size: 19px; font-weight: 600; }
+  .order-card { background: #fff; border-radius: 10px; margin: 0 12px 12px; padding: 14px; }
+  .order-meta { display: flex; align-items: center; gap: 6px; color: #8f959e; font-size: 12px; }
+  .order-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: #c9cdd4; }
+  .order-route { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; margin: 8px 0 12px; }
+  .order-route .gdot { width: 6px; height: 6px; border-radius: 50%; background: #00c160; flex: 0 0 auto; }
+  .inv-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 15px; }
+  .inv-item .check {
+    width: 20px; height: 20px; border: 1.5px solid #c9cdd4; border-radius: 50%; flex: 0 0 auto;
+  }
+  .inv-item .name { flex: 1; min-width: 0; }
+  .inv-item .price { color: #f54a45; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+  .inv-item.disabled { color: #b7bcc3; font-size: 13px; }
+  .inv-item.disabled .check { border-color: #dcdfe3; background: #f2f3f5; }
+  .inv-item.disabled .price { color: #c9cdd4; }
+  .guide-link { color: #8f959e; text-decoration: none; white-space: nowrap; }
+  .guide-link.clickable { color: var(--blue); cursor: pointer; }
+  .phone-bottom {
+    padding: 10px 14px 26px; background: #fff; border-top: 1px solid #f0f1f2;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .phone-bottom .selall { display: flex; align-items: center; gap: 6px; color: #646a73; font-size: 14px; }
+  .phone-bottom .selall .check { width: 20px; height: 20px; border: 1.5px solid #c9cdd4; border-radius: 50%; }
+  .phone-bottom .total { margin-left: auto; font-size: 15px; }
+  .phone-bottom .total b { color: #f54a45; font-size: 19px; font-weight: 600; }
+  .phone-bottom .next {
+    background: var(--primary); color: #fff; border: none; border-radius: 22px;
+    height: 42px; padding: 0 28px; font-size: 16px; font-weight: 500;
+  }
+  .phone-bottom .next[disabled] { background: #d9f5ea; color: #fff; cursor: default; }
+
+  .sheet-mask {
+    position: absolute; inset: 0; background: rgba(0, 0, 0, .45); z-index: 5;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .sheet-mask.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; max-height: 72%; background: #fff;
+    border-radius: 16px 16px 0 0; z-index: 6; display: flex; flex-direction: column;
+    transform: translateY(105%); transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  }
+  .sheet.show { transform: translateY(0); }
+  .sheet-head { padding: 18px 20px 12px; border-bottom: 1px solid #f0f1f2; position: relative; flex-shrink: 0; }
+  .sheet-head h3 { font-size: 17px; font-weight: 600; padding-right: 28px; line-height: 1.5; }
+  .sheet-head .close { position: absolute; right: 14px; top: 14px; border: none; background: none; font-size: 18px; color: #8f959e; }
+  .sheet-banner {
+    margin-top: 8px; padding: 7px 10px; border-radius: 6px; background: #fff7e8;
+    color: #b25e00; font-size: 12px; line-height: 1.5;
+  }
+  .pv-extra { padding: 0 14px 14px; }
+  .pv-extra button {
+    width: 100%; height: 38px; border: 1px dashed #c9cdd4; border-radius: 8px;
+    background: #fff; color: var(--blue); font-size: 13px;
+  }
+  .pv-extra button:hover { background: #f5f8ff; border-color: var(--blue); }
+  .inv-item.guide-enabled { cursor: pointer; }
+  .phone-toast {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.95);
+    background: rgba(31, 35, 41, .84); color: #fff; font-size: 13px; line-height: 1.6;
+    padding: 10px 14px; border-radius: 8px; max-width: 80%; text-align: center;
+    z-index: 8; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .phone-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .sheet-body { padding: 16px 20px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #333; }
+  .sheet-body p { margin: 0 0 10px; }
+  .sheet-body ol, .sheet-body ul { padding-left: 20px; margin: 0 0 10px; }
+  .sheet-body img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; cursor: zoom-in; }
+  .sheet-foot { padding: 10px 20px 26px; flex-shrink: 0; }
+  .sheet-foot button {
+    width: 100%; height: 44px; border: none; border-radius: 22px; background: var(--primary);
+    color: #fff; font-size: 16px; font-weight: 500;
+  }
+  .phone-empty { padding: 40px 24px; text-align: center; color: var(--text-3); font-size: 13px; line-height: 1.8; }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .85); z-index: 120;
+    display: none; align-items: center; justify-content: center; padding: 40px;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 6px; }
+
+  .preview-modal { width: 480px; background: #fff; border-radius: 12px; overflow: hidden; }
+  .preview-modal .bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-light); }
+  .preview-modal .bar .t { font-weight: 600; }
+  .preview-modal .stage { padding: 22px; background: #eceef0; display: flex; justify-content: center; }
+  .preview-modal .stage .phone { transform: scale(.92); transform-origin: top center; margin-bottom: -60px; }
+
+  @media (max-width: 760px) {
+    .drawer { width: 100vw; }
+    .form-row { flex-direction: column; gap: 0; }
+    .agreement-row { flex-wrap: wrap; }
+    .agreement-row .input.name { flex: 1 0 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">云</span>云滴出行 · 运营后台</div>
+  <nav class="nav">
+    <a href="javascript:;">首页</a>
+    <a href="javascript:;" class="active">保险管理</a>
+  </nav>
+  <div class="topbar-spacer"></div>
+  <div class="user-chip"><span class="avatar">李</span>李明宣</div>
+</header>
+
+<main class="page">
+  <div class="tabs">
+    <button class="tab active">理赔产品</button>
+    <button class="tab">险种配置</button>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <span class="field-label">险种代码</span>
+      <input id="filterCode" class="input" placeholder="请输入险种代码" />
+      <span class="field-label">保险名称</span>
+      <input id="filterName" class="input" placeholder="请输入保险名称" />
+      <div class="spacer"></div>
+      <button id="btnAdd" class="btn btn-primary">+ 新增理赔产品</button>
+    </div>
+    <div class="table-wrap">
+      <table class="list">
+        <thead>
+          <tr>
+            <th>险种代码</th>
+            <th>保险名称</th>
+            <th>方案代码</th>
+            <th>状态</th>
+            <th>投保金额</th>
+            <th>开票指引</th>
+            <th style="width:90px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="listBody"></tbody>
+      </table>
+      <div id="listEmpty" class="empty" style="display:none;">没有匹配的理赔产品</div>
+    </div>
+  </div>
+</main>
+
+<!-- 抽屉 -->
+<div id="drawerOverlay" class="overlay"></div>
+<aside id="drawer" class="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="drawer-title" id="drawerTitle">编辑理赔产品</div>
+    <button class="icon-btn" id="drawerClose" title="关闭">✕</button>
+  </div>
+  <div class="drawer-body">
+    <section class="form-section">
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label"><span class="req">*</span>险种代码</div>
+          <input id="fCode" class="input" placeholder="请输入险种代码" />
+          <div class="error-msg" id="errCode">请输入险种代码</div>
+        </div>
+        <div class="form-item">
+          <div class="form-label"><span class="req">*</span>保险名称</div>
+          <input id="fName" class="input" placeholder="请输入保险名称" />
+          <div class="error-msg" id="errName">请输入保险名称</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">方案代码</div>
+          <input id="fPlan" class="input" placeholder="请输入方案代码" />
+        </div>
+        <div class="form-item">
+          <div class="form-label">投保金额（元）</div>
+          <input id="fAmount" class="input" inputmode="decimal" placeholder="0.00" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="form-label"><span class="req">*</span>产品承保公司说明</div>
+      <textarea id="fCompanyNote" class="textarea" rows="4" maxlength="200" placeholder="请输入产品承保公司说明"></textarea>
+      <div class="label-line">
+        <span class="hint">选中保险后展示在保险下方</span>
+        <span class="counter" id="cntCompanyNote">0/200</span>
+      </div>
+      <div class="error-msg" id="errCompanyNote">请输入产品承保公司说明</div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-title">
+        <div class="left">保险协议说明</div>
+        <button class="btn btn-sm" id="btnAddAgreement">+ 增加</button>
+      </div>
+      <div class="hint" style="margin:-4px 0 12px;">展示在承保公司说明的文案后</div>
+      <div id="agreementList" class="agreement-list"></div>
+    </section>
+
+    <section class="form-section" id="guideSection">
+      <div class="section-title">
+        <div class="left">开票指引配置 <span class="tag tag-new">新增</span></div>
+        <button class="btn-ghost btn btn-sm" id="btnPreviewPhone">乘客端预览 →</button>
+      </div>
+      <div class="switch-wrap">
+        <button class="switch" id="fGuideEnabled" role="switch" aria-checked="false"></button>
+        <span class="switch-text" id="guideSwitchText">未展示开票指引入口</span>
+      </div>
+      <div class="switch-hint">开启后，乘客端「出行保障」条目中的「查看指引 &gt;&gt;」可点击，点击后展示下方配置的指引内容。</div>
+
+      <div class="guide-body collapsed" id="guideBody">
+        <div style="margin-top:16px;">
+          <div class="label-line">
+            <div class="form-label"><span class="req">*</span>指引标题</div>
+            <span class="counter" id="cntTitle">0/30</span>
+          </div>
+          <input id="fGuideTitle" class="input" maxlength="30" placeholder="如：如何为出行保障开票" />
+          <div class="error-msg" id="errTitle">开启指引入口后，指引标题必填</div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="form-label"><span class="req">*</span>指引内容</div>
+          <div class="rte-wrap" id="editorWrap">
+            <div class="rte-toolbar">
+              <button class="rte-btn" data-cmd="bold" title="加粗"><b>B</b></button>
+              <span class="rte-btn sep"></span>
+              <button class="rte-btn" data-cmd="insertUnorderedList" title="无序列表">•≡</button>
+              <button class="rte-btn" data-cmd="insertOrderedList" title="有序列表">1≡</button>
+              <span class="rte-btn sep"></span>
+              <button class="rte-btn" id="btnInsertImg" title="插入图片">🖼</button>
+              <span class="spacer"></span>
+              <span class="counter" id="cntContent">0/2000</span>
+            </div>
+            <div class="rte-editor" id="fGuideContent" contenteditable="true"
+                 data-placeholder="请输入开票指引，说明第三方开票的渠道、步骤与注意事项"></div>
+            <div class="rte-foot">
+              <span id="imgCountText">已插入 0/5 张图片</span>
+              <span>支持 JPG / PNG，单张 ≤5MB</span>
+            </div>
+          </div>
+          <div class="error-msg" id="errContent">请输入指引内容</div>
+          <div class="hint" id="guideMeta" style="display:none;"></div>
+        </div>
+        <input type="file" id="imgPicker" accept="image/jpeg,image/png" multiple style="display:none;" />
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="form-label">赠送权益配置</div>
+      <div class="switch-wrap">
+        <span style="font-size:13px;color:var(--text-2);">优惠券</span>
+        <button class="switch" id="fCoupon" role="switch" aria-checked="false"></button>
+        <span class="switch-text" id="couponSwitchText">未开启</span>
+      </div>
+    </section>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" id="drawerCancel">取消</button>
+    <button class="btn btn-primary" id="drawerSave">确定</button>
+  </div>
+</aside>
+
+<!-- 确认弹窗 -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-head" id="confirmTitle">放弃本次编辑？</div>
+    <div class="modal-body" id="confirmText">当前修改尚未保存，关闭后将丢失。</div>
+    <div class="modal-foot">
+      <button class="btn" id="confirmCancel">继续编辑</button>
+      <button class="btn btn-primary" id="confirmOk">放弃</button>
+    </div>
+  </div>
+</div>
+
+<!-- 手机预览弹窗 -->
+<div class="modal-overlay" id="previewModal">
+  <div class="preview-modal">
+    <div class="bar">
+      <span class="t">乘客端预览 · 电子发票</span>
+      <button class="icon-btn" id="previewClose">✕</button>
+    </div>
+    <div class="stage">
+      <div class="phone">
+        <div class="phone-status">
+          <span>16:17</span>
+          <span class="right">5G ▮▮▮ 86</span>
+        </div>
+        <div class="phone-nav">
+          <span class="back">‹</span>
+          <span class="title">电子发票</span>
+          <span class="star">☆</span>
+        </div>
+        <div class="phone-body">
+          <div class="inv-head">
+            <span>开票记录 ›</span>
+            <span class="notice">ⓘ 开票须知</span>
+          </div>
+          <div class="month">2026-11</div>
+          <div class="order-card">
+            <div class="order-meta"><span class="dot"></span>2026年11月11日 20:00</div>
+            <div class="order-route"><span class="gdot"></span>云滴出行总部-香格里拉</div>
+            <div class="inv-item">
+              <span class="check"></span><span class="name">任圆媛 座位费</span><span class="price">¥2</span>
+            </div>
+            <div class="inv-item">
+              <span class="check"></span><span class="name">接</span><span class="price">¥0</span>
+            </div>
+            <div class="inv-item disabled" id="pvGuideItem">
+              <span class="check"></span>
+              <span class="name">出行保障　需前往第三方开票，<span class="guide-link" id="pvGuideLink">查看指引 &gt;&gt;</span></span>
+              <span class="price">¥10</span>
+            </div>
+          </div>
+          <div class="phone-empty" id="pvHint" style="display:none;"></div>
+          <div class="pv-extra" id="pvExtra" style="display:none;">
+            <button id="pvPreviewContent">仅预览已配置的指引内容 →</button>
+          </div>
+        </div>
+        <div class="phone-toast" id="phoneToast"></div>
+        <div class="phone-bottom">
+          <span class="selall"><span class="check"></span>全选</span>
+          <span class="total">共：<b>¥0.00</b></span>
+          <button class="next" disabled>下一步</button>
+        </div>
+        <div class="sheet-mask" id="sheetMask"></div>
+        <div class="sheet" id="sheet">
+          <div class="sheet-head">
+            <h3 id="sheetTitle">指引标题</h3>
+            <div class="sheet-banner" id="sheetBanner" style="display:none;">仅预览：乘客端入口未开启，该指引暂不可见</div>
+            <button class="close" id="sheetClose">✕</button>
+          </div>
+          <div class="sheet-body" id="sheetBody"></div>
+          <div class="sheet-foot"><button id="sheetOk">我知道了</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" alt="预览图片" /></div>
+<div class="toast" id="toast"><span class="dot">✓</span><span id="toastText"></span></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "invoice-guide-demo-v1";
+  var NOW_OPERATOR = "李明宣";
+  var MAX_TITLE = 30;
+  var MAX_CONTENT = 2000;
+  var MAX_IMAGES = 5;
+  var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  var DEFAULT_PRODUCTS = [
+    {
+      id: "p1",
+      code: "5101002",
+      name: "出行保障 · 基础版",
+      plan: "YDJTGJ2025101002P04",
+      status: "disabled",
+      amount: "10.00",
+      companyNote:
+        "本模块为保险投保页面，本产品由阳光保险经纪（上海）有限公司提供销售，由中国人民财产保险股份有限公司提供承保并负责理赔。为保障您的权益，您在本页面的操作记录将会被记录并加密存储。请仔细阅读以下重要内容。",
+      agreements: [
+        { name: "保险条款", url: "https://qiniu.ayundi.cn/app-help/user/insurance/terms" },
+        { name: "投保须知", url: "https://qiniu.ayundi.cn/app-help/user/insurance/notice" },
+        { name: "投保声明", url: "https://qiniu.ayundi.cn/app-help/user/insurance/statement" },
+        { name: "互联网保险经纪服务协议", url: "https://qiniu.ayundi.cn/app-help/user/insurance/agency" }
+      ],
+      guide: { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" },
+      coupon: false
+    },
+    {
+      id: "p2",
+      code: "5101002",
+      name: "出行保障 · 无忧畅行版",
+      plan: "YDJTGJ2025101002P03",
+      status: "disabled",
+      amount: "5.00",
+      companyNote:
+        "本产品由阳光保险经纪（上海）有限公司提供销售，由中国人民财产保险股份有限公司承保并负责理赔。请您在投保前仔细阅读保险条款、投保须知等内容。",
+      agreements: [
+        { name: "保险条款", url: "https://qiniu.ayundi.cn/app-help/user/insurance/terms" },
+        { name: "投保须知", url: "https://qiniu.ayundi.cn/app-help/user/insurance/notice" }
+      ],
+      guide: {
+        enabled: true,
+        title: "如何为出行保障开票",
+        content:
+          "<p>出行保障（保险）由第三方保险公司承保并开票，云滴出行仅提供投保服务。如需开票，请按以下方式操作：</p>" +
+          "<ol><li>打开「出行保障」承保短信或保单邮件，进入保险公司公众号 / 小程序；</li>" +
+          "<li>在「我的保单」中选择对应订单，提交开票申请；</li>" +
+          "<li>电子发票将在 1-3 个工作日内发送至您填写的邮箱。</li></ol>" +
+          "<p>如有疑问，请联系保险公司客服：95518。</p>",
+        updatedAt: "2026-11-20T10:00:00Z",
+        updatedBy: "李明宣"
+      },
+      coupon: false
+    }
+  ];
+
+  var products = loadProducts();
+  var editingId = null;
+  var isNew = false;
+  var dirty = false;
+  var snapshot = "";
+  var pendingOnOk = null;
+  var pendingImg = 0;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------------- 数据 ---------------- */
+  function loadProducts() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (e) { /* ignore */ }
+    return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    } catch (e) {
+      toast("本地存储空间不足，图片数据未持久化", true);
+    }
+  }
+
+  function escapeHTML(str) {
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function uuid() {
+    return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function textLen(html) {
+    var div = document.createElement("div");
+    div.innerHTML = html || "";
+    return (div.textContent || "").replace(/\s+/g, " ").trim().length;
+  }
+
+  function countImgs(html) {
+    var div = document.createElement("div");
+    div.innerHTML = html || "";
+    return div.querySelectorAll("img").length;
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
+      p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
+  /* ---------------- 列表 ---------------- */
+  function renderList() {
+    var code = $("filterCode").value.trim();
+    var name = $("filterName").value.trim();
+    var rows = products.filter(function (p) {
+      return (!code || p.code.indexOf(code) !== -1) && (!name || p.name.indexOf(name) !== -1);
+    });
+    var html = rows.map(function (p) {
+      var statusTag = p.status === "enabled"
+        ? '<span class="tag tag-enabled">启用</span>'
+        : '<span class="tag tag-disabled">禁用</span>';
+      var guideTag = p.guide && p.guide.enabled
+        ? '<span class="tag tag-on">已开启</span>'
+        : '<span class="tag tag-off">未开启</span>';
+      return '<tr>' +
+        '<td class="mono">' + escapeHTML(p.code) + '</td>' +
+        '<td>' + escapeHTML(p.name) + '</td>' +
+        '<td class="mono">' + escapeHTML(p.plan) + '</td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td>' + escapeHTML(p.amount) + '</td>' +
+        '<td>' + guideTag + '</td>' +
+        '<td><button class="btn-ghost btn btn-sm" data-edit="' + p.id + '">编辑</button></td>' +
+        '</tr>';
+    }).join("");
+    $("listBody").innerHTML = html;
+    $("listEmpty").style.display = rows.length ? "none" : "block";
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-edit]"), function (btn) {
+      btn.addEventListener("click", function () { openDrawer(btn.getAttribute("data-edit")); });
+    });
+  }
+
+  /* ---------------- 抽屉 ---------------- */
+  function openDrawer(id) {
+    var product;
+    if (id) {
+      product = products.find(function (p) { return p.id === id; });
+      if (!product) return;
+      editingId = id;
+      isNew = false;
+      $("drawerTitle").textContent = "编辑理赔产品";
+    } else {
+      product = {
+        id: uuid(), code: "5101002", name: "", plan: "", status: "disabled", amount: "",
+        companyNote: "", agreements: [ { name: "", url: "" } ],
+        guide: { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" },
+        coupon: false
+      };
+      editingId = product.id;
+      isNew = true;
+      $("drawerTitle").textContent = "新增理赔产品";
+    }
+    fillForm(product);
+    clearErrors();
+    $("drawer").classList.add("show");
+    $("drawerOverlay").classList.add("show");
+    $("drawer").setAttribute("aria-hidden", "false");
+    snapshot = serializeForm();
+    dirty = false;
+    setTimeout(function () { $("fName").focus(); }, 260);
+  }
+
+  function fillForm(p) {
+    $("fCode").value = p.code || "";
+    $("fName").value = p.name || "";
+    $("fPlan").value = p.plan || "";
+    $("fAmount").value = p.amount || "";
+    $("fCompanyNote").value = p.companyNote || "";
+    renderAgreements(p.agreements && p.agreements.length ? p.agreements : [{ name: "", url: "" }]);
+
+    var g = p.guide || { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" };
+    setSwitch($("fGuideEnabled"), !!g.enabled);
+    $("fGuideTitle").value = g.title || "";
+    $("fGuideContent").innerHTML = g.content || "";
+    setSwitch($("fCoupon"), !!p.coupon);
+    $("couponSwitchText").textContent = p.coupon ? "已开启" : "未开启";
+
+    var meta = $("guideMeta");
+    if (g.updatedAt) {
+      meta.style.display = "block";
+      meta.textContent = "最后更新：" + fmtTime(g.updatedAt) + " · " + (g.updatedBy || "-");
+    } else {
+      meta.style.display = "none";
+      meta.textContent = "";
+    }
+    updateCounts();
+    toggleGuideBody();
+  }
+
+  function renderAgreements(list) {
+    $("agreementList").innerHTML = list.map(function (a, i) {
+      return '<div class="agreement-row" data-idx="' + i + '">' +
+        '<input class="input name" maxlength="20" placeholder="说明名称" value="' + escapeHTML(a.name) + '" />' +
+        '<input class="input url" placeholder="https://" value="' + escapeHTML(a.url) + '" />' +
+        '<span class="counter">' + String(a.name || "").length + '/20</span>' +
+        '<button class="del" title="删除">🗑</button>' +
+        '</div>';
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll(".agreement-row"), function (row) {
+      var nameInput = row.querySelector(".name");
+      var urlInput = row.querySelector(".url");
+      var counter = row.querySelector(".counter");
+      nameInput.addEventListener("input", function () {
+        counter.textContent = nameInput.value.length + "/20";
+        markDirty();
+      });
+      urlInput.addEventListener("input", markDirty);
+      row.querySelector(".del").addEventListener("click", function () {
+        var idx = Number(row.getAttribute("data-idx"));
+        var current = readAgreements();
+        current.splice(idx, 1);
+        if (!current.length) current = [{ name: "", url: "" }];
+        renderAgreements(current);
+        markDirty();
+      });
+    });
+  }
+
+  function readAgreements() {
+    return Array.prototype.map.call(document.querySelectorAll(".agreement-row"), function (row) {
+      return {
+        name: row.querySelector(".name").value.trim(),
+        url: row.querySelector(".url").value.trim()
+      };
+    }).filter(function (a) { return a.name || a.url; });
+  }
+
+  function setSwitch(el, on) {
+    el.classList.toggle("on", on);
+    el.setAttribute("aria-checked", on ? "true" : "false");
+  }
+
+  function toggleGuideBody() {
+    var on = $("fGuideEnabled").classList.contains("on");
+    $("guideBody").classList.toggle("collapsed", !on);
+    $("guideSwitchText").textContent = on ? "已展示开票指引入口" : "未展示开票指引入口";
+  }
+
+  function serializeForm() {
+    return JSON.stringify({
+      code: $("fCode").value,
+      name: $("fName").value,
+      plan: $("fPlan").value,
+      amount: $("fAmount").value,
+      companyNote: $("fCompanyNote").value,
+      agreements: readAgreements(),
+      guide: {
+        enabled: $("fGuideEnabled").classList.contains("on"),
+        title: $("fGuideTitle").value,
+        content: $("fGuideContent").innerHTML
+      },
+      coupon: $("fCoupon").classList.contains("on")
+    });
+  }
+
+  function markDirty() {
+    dirty = serializeForm() !== snapshot;
+  }
+
+  function requestClose() {
+    if (!dirty) { closeDrawer(); return; }
+    openConfirm("放弃本次编辑？", "当前修改尚未保存，关闭后将丢失。", "继续编辑", "放弃", function () {
+      closeDrawer();
+    });
+  }
+
+  function closeDrawer() {
+    $("drawer").classList.remove("show");
+    $("drawerOverlay").classList.remove("show");
+    $("drawer").setAttribute("aria-hidden", "true");
+    dirty = false;
+    editingId = null;
+  }
+
+  /* ---------------- 校验与保存 ---------------- */
+  function clearErrors() {
+    Array.prototype.forEach.call(document.querySelectorAll(".error-msg"), function (el) {
+      el.classList.remove("show");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".input, .textarea, .rte-wrap"), function (el) {
+      el.classList.remove("error");
+    });
+  }
+
+  function showError(inputEl, errEl) {
+    if (inputEl) inputEl.classList.add("error");
+    if (errEl) errEl.classList.add("show");
+  }
+
+  function validate() {
+    clearErrors();
+    $("errContent").textContent = "请输入指引内容";
+    var errors = [];
+
+    if (!$("fCode").value.trim()) errors.push(["fCode", "errCode"]);
+    if (!$("fName").value.trim()) errors.push(["fName", "errName"]);
+    if (!$("fCompanyNote").value.trim()) errors.push(["fCompanyNote", "errCompanyNote"]);
+
+    var badAgreement = null;
+    Array.prototype.forEach.call(document.querySelectorAll(".agreement-row"), function (row) {
+      var name = row.querySelector(".name").value.trim();
+      var url = row.querySelector(".url").value.trim();
+      if (!badAgreement && ((name && !url) || (url && !/^https?:\/\//i.test(url)))) {
+        badAgreement = row.querySelector(url ? ".url" : ".name");
+      }
+    });
+    if (badAgreement) {
+      badAgreement.classList.add("error");
+      toast("请补全保险协议的链接，或填写合法的 http(s) 地址", true);
+    }
+
+    var guideOn = $("fGuideEnabled").classList.contains("on");
+    if (guideOn) {
+      var title = $("fGuideTitle").value.trim();
+      var contentHTML = $("fGuideContent").innerHTML;
+      if (!title) errors.push(["fGuideTitle", "errTitle"]);
+      if (!textLen(contentHTML)) errors.push(["fGuideContent", "errContent"]);
+      if (textLen(contentHTML) > MAX_CONTENT) {
+        showError(null, $("errContent"));
+        $("errContent").textContent = "指引内容超出 2000 字，请精简后再保存";
+        $("errContent").classList.add("show");
+      }
+      if (countImgs(contentHTML) > MAX_IMAGES) {
+        $("editorWrap").classList.add("error");
+        toast("指引图片最多 " + MAX_IMAGES + " 张", true);
+      }
+    }
+
+    if (errors.length) {
+      errors.forEach(function (pair) {
+        var input = $(pair[0]);
+        showError(input && input.classList.contains("rte-editor") ? null : input, $(pair[1]));
+        if (pair[0] === "fGuideContent") $("editorWrap").classList.add("error");
+      });
+      var first = errors[0][0];
+      var firstEl = first === "fGuideContent" ? $("editorWrap") : $(first);
+      if (firstEl) firstEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      toast("请检查必填项", true);
+      return false;
+    }
+    return !badAgreement;
+  }
+
+  function save() {
+    if (pendingImg > 0) { toast("图片处理中，请稍候再保存", true); return; }
+    markDirty();
+    if (!validate()) return;
+
+    var existing = products.find(function (p) { return p.id === editingId; });
+    var guideEnabled = $("fGuideEnabled").classList.contains("on");
+    var oldGuide = existing ? existing.guide : null;
+    var guideContent = $("fGuideContent").innerHTML;
+    var hasContent = textLen(guideContent) > 0 || countImgs(guideContent) > 0;
+
+    var data = {
+      code: $("fCode").value.trim(),
+      name: $("fName").value.trim(),
+      plan: $("fPlan").value.trim(),
+      amount: $("fAmount").value.trim() || "0.00",
+      companyNote: $("fCompanyNote").value.trim(),
+      agreements: readAgreements(),
+      guide: {
+        enabled: guideEnabled,
+        title: $("fGuideTitle").value.trim(),
+        content: guideContent,
+        updatedAt: oldGuide && oldGuide.updatedAt,
+        updatedBy: oldGuide && oldGuide.updatedBy
+      },
+      coupon: $("fCoupon").classList.contains("on")
+    };
+
+    var changed = !oldGuide || oldGuide.title !== data.guide.title ||
+      oldGuide.content !== data.guide.content || oldGuide.enabled !== data.guide.enabled;
+    if (changed) {
+      data.guide.updatedAt = new Date().toISOString();
+      data.guide.updatedBy = NOW_OPERATOR;
+    }
+
+    if (existing) {
+      Object.assign(existing, data);
+      existing.status = existing.status || "disabled";
+    } else {
+      products.unshift(Object.assign({ id: editingId, status: "disabled" }, data));
+    }
+
+    persist();
+    dirty = false;
+    closeDrawer();
+    renderList();
+    if (guideEnabled) {
+      toast("保存成功，乘客端已同步展示");
+    } else if (hasContent) {
+      toast("保存成功；指引入口未开启，乘客端暂不展示");
+    } else {
+      toast("保存成功");
+    }
+  }
+
+  /* ---------------- 富文本与图片 ---------------- */
+  function updateCounts() {
+    var title = $("fGuideTitle").value;
+    var c1 = $("cntTitle");
+    c1.textContent = title.length + "/" + MAX_TITLE;
+    c1.classList.toggle("over", title.length > MAX_TITLE);
+
+    var len = textLen($("fGuideContent").innerHTML);
+    var c2 = $("cntContent");
+    c2.textContent = len + "/" + MAX_CONTENT;
+    c2.classList.toggle("over", len > MAX_CONTENT);
+
+    var noteLen = $("fCompanyNote").value.length;
+    var c3 = $("cntCompanyNote");
+    c3.textContent = noteLen + "/200";
+    c3.classList.toggle("over", noteLen > 200);
+
+    var imgs = countImgs($("fGuideContent").innerHTML);
+    $("imgCountText").textContent = "已插入 " + imgs + "/" + MAX_IMAGES + " 张图片";
+  }
+
+  function editorHasFocus() {
+    var editor = $("fGuideContent");
+    var sel = window.getSelection();
+    return sel && sel.rangeCount && editor.contains(sel.anchorNode);
+  }
+
+  function compressImage(file, cb) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var maxW = 1200;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        cb(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = function () { cb(e.target.result); };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function insertImages(files) {
+    var remaining = MAX_IMAGES - countImgs($("fGuideContent").innerHTML);
+    if (remaining <= 0) { toast("最多插入 " + MAX_IMAGES + " 张图片", true); return; }
+    var list = Array.prototype.slice.call(files).slice(0, remaining);
+    if (files.length > remaining) toast("最多插入 " + MAX_IMAGES + " 张图片，已忽略超出的图片", true);
+
+    list.forEach(function (file) {
+      if (["image/jpeg", "image/png"].indexOf(file.type) === -1) {
+        toast("仅支持 JPG / PNG 格式", true); return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        toast("图片「" + file.name + "」超过 5MB，已忽略", true); return;
+      }
+      pendingImg++;
+      compressImage(file, function (dataUrl) {
+        var img = document.createElement("img");
+        img.src = dataUrl;
+        img.alt = "指引图片";
+        var editor = $("fGuideContent");
+        if (editorHasFocus()) {
+          var sel = window.getSelection();
+          var range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(img);
+          range.setStartAfter(img);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          editor.appendChild(img);
+        }
+        editor.appendChild(document.createElement("p")).appendChild(document.createElement("br"));
+        pendingImg--;
+        updateCounts();
+        markDirty();
+      });
+    });
+    $("imgPicker").value = "";
+  }
+
+  /* ---------------- 乘客端预览 ---------------- */
+  function currentGuideDraft() {
+    return {
+      enabled: $("fGuideEnabled").classList.contains("on"),
+      title: $("fGuideTitle").value.trim(),
+      content: $("fGuideContent").innerHTML
+    };
+  }
+
+  function guideHasContent(g) {
+    return textLen(g.content) > 0 || countImgs(g.content) > 0;
+  }
+
+  function openPreview() {
+    var g = currentGuideDraft();
+    var item = $("pvGuideItem");
+    var hint = $("pvHint");
+    closeSheet();
+    $("phoneToast").classList.remove("show");
+    item.classList.add("disabled");
+    item.classList.toggle("guide-enabled", g.enabled);
+    $("pvGuideLink").classList.toggle("clickable", g.enabled);
+
+    hint.style.display = "block";
+    $("pvExtra").style.display = "none";
+    if (g.enabled) {
+      hint.textContent = "开票指引入口已开启：点击「查看指引 >>」查看实际效果";
+      hint.style.color = "#646a73";
+    } else if (guideHasContent(g)) {
+      hint.textContent = "入口未开启：乘客端灰显不可点击。已填写的内容可点下方按钮仅预览。";
+      hint.style.color = "#b25e00";
+      $("pvExtra").style.display = "block";
+    } else {
+      hint.textContent = "开票指引入口未开启：文案灰显、不可点击，保持现状";
+      hint.style.color = "#8f959e";
+    }
+    $("previewModal").classList.add("show");
+
+    if (guideHasContent(g)) {
+      setTimeout(function () {
+        if (!$("previewModal").classList.contains("show")) return;
+        if (!$("sheet").classList.contains("show")) openSheet(!g.enabled);
+      }, 320);
+    }
+  }
+
+  function phoneToast(msg) {
+    var el = $("phoneToast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(el._timer);
+    el._timer = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
+
+  function handleGuideClick() {
+    var g = currentGuideDraft();
+    if (g.enabled) { openSheet(false); return; }
+    phoneToast(guideHasContent(g)
+      ? "入口未开启，乘客端不可点击；已配置内容需开启开关后才会展示"
+      : "开票指引入口未开启，乘客端不展示指引");
+  }
+
+  function openSheet(previewOnly) {
+    var g = currentGuideDraft();
+    if (!g.enabled && !previewOnly) return;
+    $("sheetTitle").textContent = g.title || "（未填写指引标题）";
+    $("sheetBanner").style.display = previewOnly ? "block" : "none";
+    $("sheetBody").innerHTML = g.content || '<p style="color:#8f959e;">（未填写指引内容）</p>';
+    $("sheetMask").classList.add("show");
+    $("sheet").classList.add("show");
+  }
+
+  function closeSheet() {
+    $("sheetMask").classList.remove("show");
+    $("sheet").classList.remove("show");
+  }
+
+  /* ---------------- 弹窗 / Toast ---------------- */
+  function openConfirm(title, text, cancelLabel, okLabel, onOk) {
+    $("confirmTitle").textContent = title;
+    $("confirmText").textContent = text;
+    $("confirmCancel").textContent = cancelLabel;
+    $("confirmOk").textContent = okLabel;
+    pendingOnOk = onOk;
+    $("confirmModal").classList.add("show");
+  }
+
+  function toast(msg, isError) {
+    var t = $("toast");
+    $("toastText").textContent = msg;
+    t.classList.toggle("err", !!isError);
+    t.querySelector(".dot").textContent = isError ? "!" : "✓";
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.classList.remove("show"); }, 2400);
+  }
+
+  function openLightbox(src) {
+    $("lightboxImg").src = src;
+    $("lightbox").classList.add("show");
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  $("filterCode").addEventListener("input", renderList);
+  $("filterName").addEventListener("input", renderList);
+  $("btnAdd").addEventListener("click", function () { openDrawer(null); });
+
+  $("drawerOverlay").addEventListener("click", requestClose);
+  $("drawerClose").addEventListener("click", requestClose);
+  $("drawerCancel").addEventListener("click", requestClose);
+  $("drawerSave").addEventListener("click", save);
+
+  $("btnAddAgreement").addEventListener("click", function () {
+    var list = readAgreements();
+    list.push({ name: "", url: "" });
+    renderAgreements(list);
+    markDirty();
+    var rows = document.querySelectorAll(".agreement-row");
+    if (rows.length) rows[rows.length - 1].querySelector(".name").focus();
+  });
+
+  $("fGuideEnabled").addEventListener("click", function () {
+    var on = !$("fGuideEnabled").classList.contains("on");
+    setSwitch($("fGuideEnabled"), on);
+    toggleGuideBody();
+    markDirty();
+    if (on) setTimeout(function () { $("fGuideTitle").focus(); }, 60);
+  });
+
+  $("fCoupon").addEventListener("click", function () {
+    var on = !$("fCoupon").classList.contains("on");
+    setSwitch($("fCoupon"), on);
+    $("couponSwitchText").textContent = on ? "已开启" : "未开启";
+    markDirty();
+  });
+
+  $("fGuideTitle").addEventListener("input", function () { updateCounts(); markDirty(); });
+  $("fCompanyNote").addEventListener("input", function () { updateCounts(); markDirty(); });
+  ["fCode", "fName", "fPlan", "fAmount"].forEach(function (id) {
+    $(id).addEventListener("input", markDirty);
+  });
+
+  var editor = $("fGuideContent");
+  editor.addEventListener("input", function () { updateCounts(); markDirty(); });
+  editor.addEventListener("paste", function (e) {
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    document.execCommand("insertText", false, text);
+  });
+  editor.addEventListener("click", function (e) {
+    if (e.target.tagName === "IMG") openLightbox(e.target.src);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".rte-btn[data-cmd]"), function (btn) {
+    btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    btn.addEventListener("click", function () {
+      editor.focus();
+      document.execCommand(btn.getAttribute("data-cmd"), false, null);
+      updateCounts();
+      markDirty();
+    });
+  });
+
+  $("btnInsertImg").addEventListener("mousedown", function (e) { e.preventDefault(); });
+  $("btnInsertImg").addEventListener("click", function () { $("imgPicker").click(); });
+  $("imgPicker").addEventListener("change", function (e) { insertImages(e.target.files); });
+
+  $("btnPreviewPhone").addEventListener("click", openPreview);
+  $("previewClose").addEventListener("click", function () { $("previewModal").classList.remove("show"); closeSheet(); });
+  $("pvGuideItem").addEventListener("click", handleGuideClick);
+  $("pvPreviewContent").addEventListener("click", function (e) {
+    e.stopPropagation();
+    openSheet(true);
+  });
+  $("sheetClose").addEventListener("click", closeSheet);
+  $("sheetOk").addEventListener("click", closeSheet);
+  $("sheetMask").addEventListener("click", closeSheet);
+  $("sheetBody").addEventListener("click", function (e) {
+    if (e.target.tagName === "IMG") openLightbox(e.target.src);
+  });
+
+  $("lightbox").addEventListener("click", function () { $("lightbox").classList.remove("show"); });
+
+  $("confirmCancel").addEventListener("click", function () {
+    $("confirmModal").classList.remove("show");
+    pendingOnOk = null;
+  });
+  $("confirmOk").addEventListener("click", function () {
+    $("confirmModal").classList.remove("show");
+    var fn = pendingOnOk;
+    pendingOnOk = null;
+    if (fn) fn();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if ($("lightbox").classList.contains("show")) { $("lightbox").classList.remove("show"); return; }
+    if ($("previewModal").classList.contains("show")) {
+      if ($("sheet").classList.contains("show")) { closeSheet(); return; }
+      $("previewModal").classList.remove("show");
+      return;
+    }
+    if ($("confirmModal").classList.contains("show")) {
+      $("confirmModal").classList.remove("show");
+      pendingOnOk = null;
+      return;
+    }
+    if ($("drawer").classList.contains("show")) requestClose();
+  });
+
+  /* ---------------- 启动 ---------------- */
+  renderList();
+  updateCounts();
+})();
+</script>
+</body>
+</html>
