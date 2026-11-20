@@ -229,13 +229,21 @@
   .rte-btn:hover { background: #eceef0; color: var(--text); }
   .rte-btn.sep { width: 1px; height: 18px; background: var(--border); margin: 0 6px; border-radius: 0; }
   .rte-toolbar .spacer { flex: 1; }
+  .rte-select {
+    height: 26px; border: 1px solid var(--border); border-radius: 4px; background: #fff;
+    font-size: 13px; color: var(--text-2); padding: 0 4px; outline: none;
+  }
+  .rte-select:focus { border-color: var(--primary); }
   .rte-editor {
     min-height: 140px; max-height: 320px; overflow-y: auto; padding: 12px 14px;
     font-size: 14px; line-height: 1.75; outline: none;
   }
   .rte-editor:empty::before { content: attr(data-placeholder); color: var(--text-3); }
   .rte-editor p { margin: 0 0 8px; }
+  .rte-editor h3 { font-size: 16px; font-weight: 600; margin: 14px 0 8px; }
+  .rte-editor h4 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
   .rte-editor ol, .rte-editor ul { padding-left: 22px; margin: 0 0 8px; }
+  .rte-editor a { color: var(--blue); text-decoration: underline; }
   .rte-editor img { max-width: 100%; border-radius: 4px; margin: 6px 0; cursor: zoom-in; }
   .rte-foot {
     display: flex; align-items: center; justify-content: space-between;
@@ -360,6 +368,9 @@
   .phone-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   .sheet-body { padding: 16px 20px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #333; }
   .sheet-body p { margin: 0 0 10px; }
+  .sheet-body h3 { font-size: 16px; font-weight: 600; margin: 14px 0 8px; }
+  .sheet-body h4 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
+  .sheet-body a { color: var(--blue); text-decoration: underline; word-break: break-all; }
   .sheet-body ol, .sheet-body ul { padding-left: 20px; margin: 0 0 10px; }
   .sheet-body img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; cursor: zoom-in; }
   .sheet-foot { padding: 10px 20px 26px; flex-shrink: 0; }
@@ -514,12 +525,27 @@
           <div class="form-label"><span class="req">*</span>指引内容</div>
           <div class="rte-wrap" id="editorWrap">
             <div class="rte-toolbar">
+              <select class="rte-select" id="rteBlock" title="段落格式">
+                <option value="p">正文</option>
+                <option value="h3">标题</option>
+                <option value="h4">小标题</option>
+              </select>
+              <span class="rte-btn sep"></span>
               <button class="rte-btn" data-cmd="bold" title="加粗"><b>B</b></button>
+              <button class="rte-btn" data-cmd="italic" title="斜体"><i>I</i></button>
+              <button class="rte-btn" data-cmd="underline" title="下划线"><u>U</u></button>
+              <button class="rte-btn" data-cmd="strikeThrough" title="删除线"><s>S</s></button>
               <span class="rte-btn sep"></span>
               <button class="rte-btn" data-cmd="insertUnorderedList" title="无序列表">•≡</button>
               <button class="rte-btn" data-cmd="insertOrderedList" title="有序列表">1≡</button>
               <span class="rte-btn sep"></span>
+              <button class="rte-btn" data-cmd="justifyLeft" title="左对齐">⇤</button>
+              <button class="rte-btn" data-cmd="justifyCenter" title="居中">↔</button>
+              <button class="rte-btn" data-cmd="justifyRight" title="右对齐">⇥</button>
+              <span class="rte-btn sep"></span>
+              <button class="rte-btn" id="btnInsertLink" title="插入链接">🔗</button>
               <button class="rte-btn" id="btnInsertImg" title="插入图片">🖼</button>
+              <button class="rte-btn" data-cmd="removeFormat" title="清除格式">T✕</button>
               <span class="spacer"></span>
               <span class="counter" id="cntContent">0/2000</span>
             </div>
@@ -527,7 +553,7 @@
                  data-placeholder="请输入开票指引，说明第三方开票的渠道、步骤与注意事项"></div>
             <div class="rte-foot">
               <span id="imgCountText">已插入 0/5 张图片</span>
-              <span>支持 JPG / PNG，单张 ≤5MB</span>
+              <span>支持 JPG / PNG，单张 ≤1MB</span>
             </div>
           </div>
           <div class="error-msg" id="errContent">请输入指引内容</div>
@@ -560,6 +586,24 @@
     <div class="modal-foot">
       <button class="btn" id="confirmCancel">继续编辑</button>
       <button class="btn btn-primary" id="confirmOk">放弃</button>
+    </div>
+  </div>
+</div>
+
+<!-- 插入链接弹窗 -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal" style="width: 380px;">
+    <div class="modal-head">插入链接</div>
+    <div class="modal-body">
+      <div class="form-label">链接地址 <span class="req">*</span></div>
+      <input id="linkUrl" class="input" placeholder="https://" />
+      <div class="error-msg" id="errLink">请输入合法的 http(s) 链接</div>
+      <div class="form-label" style="margin-top: 14px;">显示文字（可选）</div>
+      <input id="linkText" class="input" placeholder="留空则显示链接地址" />
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="linkCancel">取消</button>
+      <button class="btn btn-primary" id="linkOk">插入</button>
     </div>
   </div>
 </div>
@@ -641,7 +685,7 @@
   var MAX_TITLE = 30;
   var MAX_CONTENT = 2000;
   var MAX_IMAGES = 5;
-  var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+  var MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
   var DEFAULT_PRODUCTS = [
     {
@@ -698,6 +742,7 @@
   var snapshot = "";
   var pendingOnOk = null;
   var pendingImg = 0;
+  var savedRange = null;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -1077,6 +1122,57 @@
     return sel && sel.rangeCount && editor.contains(sel.anchorNode);
   }
 
+  function saveSelection() {
+    var editor = $("fGuideContent");
+    var sel = window.getSelection();
+    savedRange = (sel && sel.rangeCount && editor.contains(sel.anchorNode))
+      ? sel.getRangeAt(0).cloneRange()
+      : null;
+  }
+
+  function restoreSelection() {
+    var editor = $("fGuideContent");
+    editor.focus();
+    var sel = window.getSelection();
+    if (savedRange) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+      return;
+    }
+    var range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function openLinkModal() {
+    $("linkUrl").value = "";
+    $("linkText").value = "";
+    $("linkUrl").classList.remove("error");
+    $("errLink").classList.remove("show");
+    $("linkModal").classList.add("show");
+    setTimeout(function () { $("linkUrl").focus(); }, 30);
+  }
+
+  function insertLink() {
+    var url = $("linkUrl").value.trim();
+    if (!/^https?:\/\/[^\s]+$/i.test(url)) {
+      $("linkUrl").classList.add("error");
+      $("errLink").classList.add("show");
+      $("linkUrl").focus();
+      return;
+    }
+    var text = $("linkText").value.trim() || url;
+    var html = '<a href="' + escapeHTML(url) + '" target="_blank" rel="noopener">' +
+      escapeHTML(text) + '</a>';
+    $("linkModal").classList.remove("show");
+    restoreSelection();
+    document.execCommand("insertHTML", false, html);
+    updateCounts();
+    markDirty();
+  }
+
   function compressImage(file, cb) {
     var reader = new FileReader();
     reader.onload = function (e) {
@@ -1107,7 +1203,7 @@
         toast("仅支持 JPG / PNG 格式", true); return;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        toast("图片「" + file.name + "」超过 5MB，已忽略", true); return;
+        toast("图片「" + file.name + "」超过 1MB，已忽略", true); return;
       }
       pendingImg++;
       compressImage(file, function (dataUrl) {
@@ -1303,6 +1399,31 @@
   $("btnInsertImg").addEventListener("click", function () { $("imgPicker").click(); });
   $("imgPicker").addEventListener("change", function (e) { insertImages(e.target.files); });
 
+  $("rteBlock").addEventListener("mousedown", saveSelection);
+  $("rteBlock").addEventListener("change", function () {
+    var tag = this.value;
+    restoreSelection();
+    document.execCommand("formatBlock", false, "<" + tag + ">");
+    updateCounts();
+    markDirty();
+    this.value = "p";
+  });
+
+  $("btnInsertLink").addEventListener("mousedown", function (e) {
+    e.preventDefault();
+    saveSelection();
+  });
+  $("btnInsertLink").addEventListener("click", openLinkModal);
+  $("linkCancel").addEventListener("click", function () {
+    $("linkModal").classList.remove("show");
+  });
+  $("linkOk").addEventListener("click", insertLink);
+  ["linkUrl", "linkText"].forEach(function (id) {
+    $(id).addEventListener("keydown", function (e) {
+      if (e.key === "Enter") insertLink();
+    });
+  });
+
   $("btnPreviewPhone").addEventListener("click", openPreview);
   $("previewClose").addEventListener("click", function () { $("previewModal").classList.remove("show"); closeSheet(); });
   $("pvGuideItem").addEventListener("click", handleGuideClick);
@@ -1341,6 +1462,10 @@
     if ($("confirmModal").classList.contains("show")) {
       $("confirmModal").classList.remove("show");
       pendingOnOk = null;
+      return;
+    }
+    if ($("linkModal").classList.contains("show")) {
+      $("linkModal").classList.remove("show");
       return;
     }
     if ($("drawer").classList.contains("show")) requestClose();
