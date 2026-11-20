@@ -334,24 +334,22 @@
   }
   .phone-bottom .next[disabled] { background: #d9f5ea; color: #fff; cursor: default; }
 
-  .sheet-mask {
-    position: absolute; inset: 0; background: rgba(0, 0, 0, .45); z-index: 5;
-    opacity: 0; pointer-events: none; transition: opacity .2s;
+  .phone-page {
+    position: absolute; inset: 34px 0 0 0; background: #fff; z-index: 6;
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .25s cubic-bezier(.4, 0, .2, 1);
   }
-  .sheet-mask.show { opacity: 1; pointer-events: auto; }
-  .sheet {
-    position: absolute; left: 0; right: 0; bottom: 0; max-height: 72%; background: #fff;
-    border-radius: 16px 16px 0 0; z-index: 6; display: flex; flex-direction: column;
-    transform: translateY(105%); transition: transform .28s cubic-bezier(.4, 0, .2, 1);
-  }
-  .sheet.show { transform: translateY(0); }
-  .sheet-head { padding: 18px 20px 12px; border-bottom: 1px solid #f0f1f2; position: relative; flex-shrink: 0; }
-  .sheet-head h3 { font-size: 17px; font-weight: 600; padding-right: 28px; line-height: 1.5; }
-  .sheet-head .close { position: absolute; right: 14px; top: 14px; border: none; background: none; font-size: 18px; color: #8f959e; }
-  .sheet-banner {
-    margin-top: 8px; padding: 7px 10px; border-radius: 6px; background: #fff7e8;
-    color: #b25e00; font-size: 12px; line-height: 1.5;
-  }
+  .phone-page.show { transform: translateX(0); }
+  .phone-page .phone-nav { border-bottom: 1px solid #f0f1f2; }
+  .phone-page .phone-nav .back { border: none; background: none; padding: 0; text-align: left; cursor: pointer; }
+  .guide-page-body { flex: 1; overflow-y: auto; padding: 16px 16px 28px; font-size: 14px; line-height: 1.8; color: #333; }
+  .guide-page-body h2 { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+  .guide-page-body p { margin: 0 0 10px; }
+  .guide-page-body h3 { font-size: 16px; font-weight: 600; margin: 14px 0 8px; }
+  .guide-page-body h4 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
+  .guide-page-body a { color: var(--blue); text-decoration: underline; word-break: break-all; }
+  .guide-page-body ol, .guide-page-body ul { padding-left: 20px; margin: 0 0 10px; }
+  .guide-page-body img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; cursor: zoom-in; }
   .pv-extra { padding: 0 14px 14px; }
   .pv-extra button {
     width: 100%; height: 38px; border: 1px dashed #c9cdd4; border-radius: 8px;
@@ -366,18 +364,6 @@
     z-index: 8; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
   }
   .phone-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  .sheet-body { padding: 16px 20px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #333; }
-  .sheet-body p { margin: 0 0 10px; }
-  .sheet-body h3 { font-size: 16px; font-weight: 600; margin: 14px 0 8px; }
-  .sheet-body h4 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
-  .sheet-body a { color: var(--blue); text-decoration: underline; word-break: break-all; }
-  .sheet-body ol, .sheet-body ul { padding-left: 20px; margin: 0 0 10px; }
-  .sheet-body img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; cursor: zoom-in; }
-  .sheet-foot { padding: 10px 20px 26px; flex-shrink: 0; }
-  .sheet-foot button {
-    width: 100%; height: 44px; border: none; border-radius: 22px; background: var(--primary);
-    color: #fff; font-size: 16px; font-weight: 500;
-  }
   .phone-empty { padding: 40px 24px; text-align: center; color: var(--text-3); font-size: 13px; line-height: 1.8; }
 
   .lightbox {
@@ -658,15 +644,13 @@
           <span class="total">共：<b>¥0.00</b></span>
           <button class="next" disabled>下一步</button>
         </div>
-        <div class="sheet-mask" id="sheetMask"></div>
-        <div class="sheet" id="sheet">
-          <div class="sheet-head">
-            <h3 id="sheetTitle">指引标题</h3>
-            <div class="sheet-banner" id="sheetBanner" style="display:none;">仅预览：乘客端入口未开启，该指引暂不可见</div>
-            <button class="close" id="sheetClose">✕</button>
+        <div class="phone-page" id="guidePage">
+          <div class="phone-nav">
+            <button class="back" id="guideBack" type="button" aria-label="返回">‹</button>
+            <span class="title">开票指引</span>
+            <span class="star">☆</span>
           </div>
-          <div class="sheet-body" id="sheetBody"></div>
-          <div class="sheet-foot"><button id="sheetOk">我知道了</button></div>
+          <div class="guide-page-body" id="guidePageBody"></div>
         </div>
       </div>
     </div>
@@ -1249,7 +1233,7 @@
     var g = currentGuideDraft();
     var item = $("pvGuideItem");
     var hint = $("pvHint");
-    closeSheet();
+    closeGuidePage();
     $("phoneToast").classList.remove("show");
     item.classList.add("disabled");
     item.classList.toggle("guide-enabled", g.enabled);
@@ -1258,7 +1242,7 @@
     hint.style.display = "block";
     $("pvExtra").style.display = "none";
     if (g.enabled) {
-      hint.textContent = "开票指引入口已开启：点击「查看指引 >>」查看实际效果";
+      hint.textContent = "开票指引入口已开启：点击「查看指引 >>」进入开票指引页面";
       hint.style.color = "#646a73";
     } else if (guideHasContent(g)) {
       hint.textContent = "入口未开启：乘客端灰显不可点击。已填写的内容可点下方按钮仅预览。";
@@ -1270,10 +1254,10 @@
     }
     $("previewModal").classList.add("show");
 
-    if (guideHasContent(g)) {
+    if (g.enabled && guideHasContent(g)) {
       setTimeout(function () {
         if (!$("previewModal").classList.contains("show")) return;
-        if (!$("sheet").classList.contains("show")) openSheet(!g.enabled);
+        if (!$("guidePage").classList.contains("show")) openGuidePage(false);
       }, 320);
     }
   }
@@ -1288,25 +1272,25 @@
 
   function handleGuideClick() {
     var g = currentGuideDraft();
-    if (g.enabled) { openSheet(false); return; }
+    if (g.enabled) { openGuidePage(false); return; }
     phoneToast(guideHasContent(g)
       ? "入口未开启，乘客端不可点击；已配置内容需开启开关后才会展示"
       : "开票指引入口未开启，乘客端不展示指引");
   }
 
-  function openSheet(previewOnly) {
+  function openGuidePage(previewOnly) {
     var g = currentGuideDraft();
     if (!g.enabled && !previewOnly) return;
-    $("sheetTitle").textContent = g.title || "（未填写指引标题）";
-    $("sheetBanner").style.display = previewOnly ? "block" : "none";
-    $("sheetBody").innerHTML = g.content || '<p style="color:#8f959e;">（未填写指引内容）</p>';
-    $("sheetMask").classList.add("show");
-    $("sheet").classList.add("show");
+    var title = escapeHTML(g.title || "开票指引");
+    $("guidePageBody").innerHTML =
+      '<h2>' + title + '</h2>' +
+      (g.content || '<p style="color:#8f959e;">（未填写指引内容）</p>');
+    $("guidePageBody").scrollTop = 0;
+    $("guidePage").classList.add("show");
   }
 
-  function closeSheet() {
-    $("sheetMask").classList.remove("show");
-    $("sheet").classList.remove("show");
+  function closeGuidePage() {
+    $("guidePage").classList.remove("show");
   }
 
   /* ---------------- 弹窗 / Toast ---------------- */
@@ -1425,16 +1409,14 @@
   });
 
   $("btnPreviewPhone").addEventListener("click", openPreview);
-  $("previewClose").addEventListener("click", function () { $("previewModal").classList.remove("show"); closeSheet(); });
+  $("previewClose").addEventListener("click", function () { $("previewModal").classList.remove("show"); closeGuidePage(); });
   $("pvGuideItem").addEventListener("click", handleGuideClick);
   $("pvPreviewContent").addEventListener("click", function (e) {
     e.stopPropagation();
-    openSheet(true);
+    openGuidePage(true);
   });
-  $("sheetClose").addEventListener("click", closeSheet);
-  $("sheetOk").addEventListener("click", closeSheet);
-  $("sheetMask").addEventListener("click", closeSheet);
-  $("sheetBody").addEventListener("click", function (e) {
+  $("guideBack").addEventListener("click", closeGuidePage);
+  $("guidePageBody").addEventListener("click", function (e) {
     if (e.target.tagName === "IMG") openLightbox(e.target.src);
   });
 
@@ -1455,7 +1437,7 @@
     if (e.key !== "Escape") return;
     if ($("lightbox").classList.contains("show")) { $("lightbox").classList.remove("show"); return; }
     if ($("previewModal").classList.contains("show")) {
-      if ($("sheet").classList.contains("show")) { closeSheet(); return; }
+      if ($("guidePage").classList.contains("show")) { closeGuidePage(); return; }
       $("previewModal").classList.remove("show");
       return;
     }
