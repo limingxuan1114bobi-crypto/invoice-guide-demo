@@ -318,8 +318,7 @@
   .inv-item.disabled { color: #b7bcc3; font-size: 13px; }
   .inv-item.disabled .check { border-color: #dcdfe3; background: #f2f3f5; }
   .inv-item.disabled .price { color: #c9cdd4; }
-  .guide-link { color: #8f959e; text-decoration: none; white-space: nowrap; }
-  .guide-link.clickable { color: var(--blue); cursor: pointer; }
+  .guide-hint { color: #f54a45; }
   .phone-bottom {
     padding: 10px 14px 26px; background: #fff; border-top: 1px solid #f0f1f2;
     display: flex; align-items: center; gap: 12px; flex-shrink: 0;
@@ -495,9 +494,19 @@
         <button class="switch" id="fGuideEnabled" role="switch" aria-checked="false"></button>
         <span class="switch-text" id="guideSwitchText">未展示开票指引入口</span>
       </div>
-      <div class="switch-hint">开启后，乘客端「出行保障」条目中的「查看指引 &gt;&gt;」可点击，点击后展示下方配置的指引内容。</div>
+      <div class="switch-hint">开启后，乘客端「出行保障」条目中的红色提示文案可点击，点击后进入开票指引页面。</div>
 
       <div class="guide-body collapsed" id="guideBody">
+        <div style="margin-top:16px;">
+          <div class="label-line">
+            <div class="form-label"><span class="req">*</span>入口提示文案</div>
+            <span class="counter" id="cntHint">0/30</span>
+          </div>
+          <input id="fGuideHint" class="input" maxlength="30" placeholder="需前往第三方开票，查看指引 >>" />
+          <div class="error-msg" id="errHint">开启指引入口后，入口提示文案必填</div>
+          <div class="hint">展示在开票列表「出行保障」行内，整句固定为红色字体，点击后进入开票指引页面</div>
+        </div>
+
         <div style="margin-top:16px;">
           <div class="label-line">
             <div class="form-label"><span class="req">*</span>指引标题</div>
@@ -629,7 +638,7 @@
             </div>
             <div class="inv-item disabled" id="pvGuideItem">
               <span class="check"></span>
-              <span class="name">出行保障　需前往第三方开票，<span class="guide-link" id="pvGuideLink">查看指引 &gt;&gt;</span></span>
+              <span class="name">出行保障　<span class="guide-hint" id="pvGuideHint">需前往第三方开票，查看指引 &gt;&gt;</span></span>
               <span class="price">¥10</span>
             </div>
           </div>
@@ -667,6 +676,8 @@
   var STORAGE_KEY = "invoice-guide-demo-v1";
   var NOW_OPERATOR = "李明宣";
   var MAX_TITLE = 30;
+  var MAX_HINT = 30;
+  var DEFAULT_HINT = "需前往第三方开票，查看指引 >>";
   var MAX_CONTENT = 2000;
   var MAX_IMAGES = 5;
   var MAX_IMAGE_BYTES = 1 * 1024 * 1024;
@@ -687,7 +698,7 @@
         { name: "投保声明", url: "https://qiniu.ayundi.cn/app-help/user/insurance/statement" },
         { name: "互联网保险经纪服务协议", url: "https://qiniu.ayundi.cn/app-help/user/insurance/agency" }
       ],
-      guide: { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" },
+      guide: { enabled: false, hint: DEFAULT_HINT, title: "", content: "", updatedAt: "", updatedBy: "" },
       coupon: false
     },
     {
@@ -705,6 +716,7 @@
       ],
       guide: {
         enabled: true,
+        hint: DEFAULT_HINT,
         title: "如何为出行保障开票",
         content:
           "<p>出行保障（保险）由第三方保险公司承保并开票，云滴出行仅提供投保服务。如需开票，请按以下方式操作：</p>" +
@@ -826,7 +838,7 @@
       product = {
         id: uuid(), code: "5101002", name: "", plan: "", status: "disabled", amount: "",
         companyNote: "", agreements: [ { name: "", url: "" } ],
-        guide: { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" },
+        guide: { enabled: false, hint: DEFAULT_HINT, title: "", content: "", updatedAt: "", updatedBy: "" },
         coupon: false
       };
       editingId = product.id;
@@ -851,8 +863,9 @@
     $("fCompanyNote").value = p.companyNote || "";
     renderAgreements(p.agreements && p.agreements.length ? p.agreements : [{ name: "", url: "" }]);
 
-    var g = p.guide || { enabled: false, title: "", content: "", updatedAt: "", updatedBy: "" };
+    var g = p.guide || { enabled: false, hint: DEFAULT_HINT, title: "", content: "", updatedAt: "", updatedBy: "" };
     setSwitch($("fGuideEnabled"), !!g.enabled);
+    $("fGuideHint").value = g.hint || DEFAULT_HINT;
     $("fGuideTitle").value = g.title || "";
     $("fGuideContent").innerHTML = g.content || "";
     setSwitch($("fCoupon"), !!p.coupon);
@@ -929,6 +942,7 @@
       agreements: readAgreements(),
       guide: {
         enabled: $("fGuideEnabled").classList.contains("on"),
+        hint: $("fGuideHint").value,
         title: $("fGuideTitle").value,
         content: $("fGuideContent").innerHTML
       },
@@ -994,8 +1008,10 @@
 
     var guideOn = $("fGuideEnabled").classList.contains("on");
     if (guideOn) {
+      var hint = $("fGuideHint").value.trim();
       var title = $("fGuideTitle").value.trim();
       var contentHTML = $("fGuideContent").innerHTML;
+      if (!hint) errors.push(["fGuideHint", "errHint"]);
       if (!title) errors.push(["fGuideTitle", "errTitle"]);
       if (!textLen(contentHTML)) errors.push(["fGuideContent", "errContent"]);
       if (textLen(contentHTML) > MAX_CONTENT) {
@@ -1044,6 +1060,7 @@
       agreements: readAgreements(),
       guide: {
         enabled: guideEnabled,
+        hint: $("fGuideHint").value.trim() || DEFAULT_HINT,
         title: $("fGuideTitle").value.trim(),
         content: guideContent,
         updatedAt: oldGuide && oldGuide.updatedAt,
@@ -1052,7 +1069,8 @@
       coupon: $("fCoupon").classList.contains("on")
     };
 
-    var changed = !oldGuide || oldGuide.title !== data.guide.title ||
+    var changed = !oldGuide || oldGuide.hint !== data.guide.hint ||
+      oldGuide.title !== data.guide.title ||
       oldGuide.content !== data.guide.content || oldGuide.enabled !== data.guide.enabled;
     if (changed) {
       data.guide.updatedAt = new Date().toISOString();
@@ -1081,6 +1099,10 @@
 
   /* ---------------- 富文本与图片 ---------------- */
   function updateCounts() {
+    var hint = $("fGuideHint").value;
+    var c0 = $("cntHint");
+    c0.textContent = hint.length + "/" + MAX_HINT;
+    c0.classList.toggle("over", hint.length > MAX_HINT);
     var title = $("fGuideTitle").value;
     var c1 = $("cntTitle");
     c1.textContent = title.length + "/" + MAX_TITLE;
@@ -1220,6 +1242,7 @@
   function currentGuideDraft() {
     return {
       enabled: $("fGuideEnabled").classList.contains("on"),
+      hint: $("fGuideHint").value.trim() || DEFAULT_HINT,
       title: $("fGuideTitle").value.trim(),
       content: $("fGuideContent").innerHTML
     };
@@ -1237,12 +1260,12 @@
     $("phoneToast").classList.remove("show");
     item.classList.add("disabled");
     item.classList.toggle("guide-enabled", g.enabled);
-    $("pvGuideLink").classList.toggle("clickable", g.enabled);
+    $("pvGuideHint").textContent = g.hint;
 
     hint.style.display = "block";
     $("pvExtra").style.display = "none";
     if (g.enabled) {
-      hint.textContent = "开票指引入口已开启：点击「查看指引 >>」进入开票指引页面";
+      hint.textContent = "开票指引入口已开启：点击红色提示文案进入开票指引页面";
       hint.style.color = "#646a73";
     } else if (guideHasContent(g)) {
       hint.textContent = "入口未开启：乘客端灰显不可点击。已填写的内容可点下方按钮仅预览。";
@@ -1342,7 +1365,7 @@
     setSwitch($("fGuideEnabled"), on);
     toggleGuideBody();
     markDirty();
-    if (on) setTimeout(function () { $("fGuideTitle").focus(); }, 60);
+    if (on) setTimeout(function () { $("fGuideHint").focus(); }, 60);
   });
 
   $("fCoupon").addEventListener("click", function () {
@@ -1352,6 +1375,7 @@
     markDirty();
   });
 
+  $("fGuideHint").addEventListener("input", function () { updateCounts(); markDirty(); });
   $("fGuideTitle").addEventListener("input", function () { updateCounts(); markDirty(); });
   $("fCompanyNote").addEventListener("input", function () { updateCounts(); markDirty(); });
   ["fCode", "fName", "fPlan", "fAmount"].forEach(function (id) {
